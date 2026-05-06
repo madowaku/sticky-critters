@@ -121,6 +121,14 @@ export const ja: Dictionary = {
     folderAdded: "フォルダ付箋を作成しました",
     pathUnknown: "パスを確認できませんでした",
   },
+  kangarooPocket: {
+    title: "カンガルーポケット",
+    subtitle: "ファイルやフォルダをここへ",
+    release: "ここで離してね",
+    done: "付箋にしました",
+    added: "ポケットから付箋を作成しました",
+    tauriOnly: "Tauri版で使えます",
+  },
   quickAdd: {
     title: "ぺたっと置く",
     placeholder: "メモ、URL、コードを入力...",

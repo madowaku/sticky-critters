@@ -14,11 +14,19 @@ Sticky Critters is a "cute but powerful" desktop sticky note application designe
 - **Productivity**: Alarm notifications (Alarm Chicken) and "Today Only" temporary notes.
 - **Customization**: Dark/Light themes, density settings, and customizable global hotkeys.
 - **Desktop Mode**: Borderless, click-through-capable mode for a truly integrated desktop experience.
+- **Kangaroo Pocket**: Open a small drop target from the tray menu, then drop files, folders, or images to turn them into sticky notes.
 
 ### Safety First
 - **No File Deletion**: We only manage links. Your original files are safe.
 - **No Command Execution**: We don't run scripts or commands.
+- **No Folder Crawling**: Folder notes store the path only. Sticky Critters does not automatically list, scan, or monitor folder contents.
 - **Local First**: Your data stays on your machine (`notes.json` and `settings.json`).
+
+### Kangaroo Pocket Notes
+- Kangaroo Pocket is opened from the tray menu and appears as a small drop window near the lower-right corner of the screen.
+- It accepts files, folders, and images, using the same safe note creation flow as dropping onto the main window.
+- It is **not** direct drag-and-drop onto the tray icon.
+- After a drop, Sticky Critters shows the main window. If Click-through was enabled, the app returns to Edit Mode so you can interact with the new notes.
 
 ### Known Issues & Roadmap
 - See [Known Limitations](known-limitations.md) for current constraints.

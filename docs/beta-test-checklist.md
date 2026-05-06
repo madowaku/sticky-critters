@@ -37,6 +37,10 @@
 | 3.4 | Import / Export | Exporting data and importing it back restores all notes and settings. | High | |
 | 3.5 | Hotkey (F1) | Hotkey successfully toggles Board visibility. | High | |
 | 3.6 | Tray Icon | Application stays in tray when closed (if configured). | Med | |
+| 3.7 | Kangaroo Pocket from Tray | Selecting "Kangaroo Pocket" from the tray menu opens a small drop window near the lower-right corner. | High | |
+| 3.8 | Kangaroo Pocket Drop | Dropping a file, folder, or image onto the pocket creates the matching file/folder/image note. | High | |
+| 3.9 | Kangaroo Pocket Click-through Recovery | If Click-through is enabled, dropping onto Kangaroo Pocket shows the main window and returns to Edit Mode. | High | |
+| 3.10 | Tray Icon Direct Drop | Dropping directly onto the tray icon is not expected to work; testers should use Kangaroo Pocket instead. | Med | |
 
 ## 4. Safety & Integrity (安全面と整合性)
 
@@ -46,3 +50,5 @@
 | 4.2 | Safe File Guard | No real files are deleted on the disk. | High | |
 | 4.3 | Locked Sketch | Drawing is disabled on locked sketch notes. | Med | |
 | 4.4 | Group Deletion | Deleting a group does NOT delete the notes inside (unless intended). | Med | |
+| 4.5 | Kangaroo Pocket File Safety | Files/folders dropped onto Kangaroo Pocket remain untouched on disk. | High | |
+| 4.6 | Folder Drop Safety | Dropping a folder creates a folder note but does not enumerate, move, delete, or monitor folder contents. | High | |

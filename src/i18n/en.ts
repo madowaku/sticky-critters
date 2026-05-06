@@ -119,6 +119,14 @@ export const en = {
     folderAdded: "Folder note created",
     pathUnknown: "Could not inspect path",
   },
+  kangarooPocket: {
+    title: "Kangaroo Pocket",
+    subtitle: "Drop files or folders here",
+    release: "Release here",
+    done: "Sticky note created",
+    added: "Note created from the pocket",
+    tauriOnly: "Available in the Tauri app",
+  },
   quickAdd: {
     title: "Add a note",
     placeholder: "Type a note, URL, or code...",

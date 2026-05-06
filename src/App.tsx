@@ -28,6 +28,11 @@ import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { setOnSaveError, getStorageInfo, saveSettings, loadSettings, type StorageInfo, type DisplayMode, type InteractionMode, type LaunchBehavior, type AppearanceSettings, DEFAULT_APPEARANCE } from "./lib/storage";
 import { exportBackup, type ExportData } from "./lib/backup";
 import { getDroppedPathInfo, isTauriDropAvailable, type DroppedPathInfo } from "./lib/tauriDrop";
+import {
+  KANGAROO_POCKET_DROP_EVENT,
+  KANGAROO_POCKET_OPEN_EVENT,
+  openKangarooPocketWindow,
+} from "./lib/kangarooPocket";
 
 type DroppedFile = File & { path?: string };
 type LayoutUndoSnapshot = Array<{ id: string; x: number; y: number }>;
@@ -1042,6 +1047,49 @@ function App() {
     },
     [addNote]
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+      return;
+    }
+
+    let unlistenOpenPocket: (() => void) | undefined;
+    let unlistenPocketDrop: (() => void) | undefined;
+
+    async function setupKangarooPocketListeners() {
+      try {
+        unlistenOpenPocket = await listen(KANGAROO_POCKET_OPEN_EVENT, () => {
+          openKangarooPocketWindow();
+        });
+        unlistenPocketDrop = await listen<DroppedPathInfo[]>(KANGAROO_POCKET_DROP_EVENT, (event) => {
+          const win = getCurrentWindow();
+          win.show().catch((error) => {
+            console.warn("[kangaroo-pocket] Failed to show main window", error);
+          });
+          win.setFocus().catch((error) => {
+            console.warn("[kangaroo-pocket] Failed to focus main window", error);
+          });
+          win.setIgnoreCursorEvents(false).catch((error) => {
+            console.warn("[kangaroo-pocket] Failed to restore pointer events", error);
+          });
+          setInteractionMode("edit");
+          saveSettings({ interactionMode: "edit" });
+          handlePathDrop(event.payload);
+          setToast(t("kangarooPocket.added"));
+          window.setTimeout(() => setToast(null), 3000);
+        });
+      } catch (error) {
+        console.warn("[kangaroo-pocket] Failed to wire events", error);
+      }
+    }
+
+    setupKangarooPocketListeners();
+
+    return () => {
+      unlistenOpenPocket?.();
+      unlistenPocketDrop?.();
+    };
+  }, [handlePathDrop, t]);
 
   if (!isLoaded || !isI18nLoaded) {
     return null; // Don't render until data is ready to avoid flicker

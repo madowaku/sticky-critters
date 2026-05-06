@@ -144,6 +144,13 @@ pub fn run() {
             let gather_notes_i =
                 MenuItem::with_id(app, "gather_notes", "Gather notes", true, None::<&str>)?;
             let new_note_i = MenuItem::with_id(app, "new_note", "New Note", true, None::<&str>)?;
+            let kangaroo_pocket_i = MenuItem::with_id(
+                app,
+                "kangaroo_pocket",
+                "Kangaroo Pocket",
+                true,
+                None::<&str>,
+            )?;
             let return_to_edit_i = MenuItem::with_id(
                 app,
                 "return_to_edit",
@@ -162,6 +169,7 @@ pub fn run() {
                     &always_on_top_i,
                     &gather_notes_i,
                     &new_note_i,
+                    &kangaroo_pocket_i,
                     &return_to_edit_i,
                     &quit_i,
                 ],
@@ -206,6 +214,11 @@ pub fn run() {
                             window.show().unwrap();
                             window.set_focus().unwrap();
                             window.emit("sticky-new-note", ()).unwrap();
+                        }
+                    }
+                    "kangaroo_pocket" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            window.emit("sticky-open-kangaroo-pocket", ()).unwrap();
                         }
                     }
                     "return_to_edit" => {
