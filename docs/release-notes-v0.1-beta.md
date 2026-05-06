@@ -1,0 +1,37 @@
+# Sticky Critters v0.1 Beta Release Notes
+
+## 🐾 Welcome to Sticky Critters!
+
+Sticky Critters is a "cute but powerful" desktop sticky note application designed for those who want to organize their thoughts, files, and sketches in a flexible workspace.
+
+### What's New in v0.1 Beta
+- **Versatile Note Types**: Memo, Code, URL, File, Folder, Image, and Sketch.
+- **Sketching**: Built-in drawing canvas for freehand notes and diagrams.
+- **Grouping**: Organize your notes into color-coded, collapsible groups.
+- **Spatial Navigation**: A "Sticky Map" to overview and jump around your large workspace.
+- **Temporal Navigation**: Recent Notes and Search History to quickly go back to what you were working on.
+- **Organization**: "Hamster Pouch" (Stash) for temporary storage and "Goat Belly" (Trash) for recovery.
+- **Productivity**: Alarm notifications (Alarm Chicken) and "Today Only" temporary notes.
+- **Customization**: Dark/Light themes, density settings, and customizable global hotkeys.
+- **Desktop Mode**: Borderless, click-through-capable mode for a truly integrated desktop experience.
+
+### Safety First
+- **No File Deletion**: We only manage links. Your original files are safe.
+- **No Command Execution**: We don't run scripts or commands.
+- **Local First**: Your data stays on your machine (`notes.json` and `settings.json`).
+
+### Known Issues & Roadmap
+- See [Known Limitations](known-limitations.md) for current constraints.
+- Future versions will include:
+  - Sticky Links (connecting notes with lines)
+  - PNG Export for sketches
+  - More interaction mode refinements
+  - Improved group auto-management
+
+### How to Install
+1. Download the `.msi` or `.exe` from the releases page (coming soon).
+2. Run the installer.
+3. Launch "Sticky Critters" from your Start menu.
+
+---
+*Thank you for trying out the beta! Stay sticky!* 🐾
