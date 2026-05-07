@@ -24,6 +24,8 @@
 
 \- Native notification actions
 
+\- macOS build / signing / notarization validation
+
 
 
 \## Rule

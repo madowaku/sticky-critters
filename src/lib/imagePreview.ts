@@ -1,16 +1,26 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
+function isTauri(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
+function isLikelyAbsolutePath(path: string): boolean {
+  return /^[a-zA-Z]:[\\/]/.test(path)
+    || path.startsWith("\\\\")
+    || path.startsWith("//")
+    || path.startsWith("/");
+}
+
 export function getImagePreviewSrc(path?: string, previewUrl?: string): string | undefined {
   if (!path && !previewUrl) return undefined;
 
-  // Tauri environment
-  if (path && typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
-    // Only convert if it's an absolute path (Likely on Windows start with C:\ or similar)
-    if (/^[a-zA-Z]:\\/.test(path) || path.startsWith("/")) {
+  if (path && isTauri()) {
+    if (isLikelyAbsolutePath(path)) {
       return convertFileSrc(path);
     }
+
+    console.warn("[imagePreview] Image note path is not absolute; preview may fail.", { path });
   }
 
-  // Browser fallback or newly dropped image
   return previewUrl;
 }

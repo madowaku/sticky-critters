@@ -128,6 +128,7 @@ export function StickyBoard({ notes, onMove, onDelete, onUpdate, onSelect, onRec
             <span>{t("onboarding.tipDrag")}</span>
             <span>{t("onboarding.tipRestore")}</span>
             <span>{t("onboarding.tipHotkey")}</span>
+            <span>{t("onboarding.tipKangaroo")}</span>
           </div>
         </div>
       )}

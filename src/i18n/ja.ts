@@ -19,11 +19,20 @@ export const ja: Dictionary = {
     dragHandle: "ここをドラッグして移動",
     wideSize: "横長にする",
     normalSize: "ふつうの幅に戻す",
+    edit: "編集",
+    save: "保存",
+    cancel: "キャンセル",
+    editHint: "Ctrl+Enterで保存 / Escでキャンセル",
+    more: "その他",
   },
   image: {
     previewUnavailable: "プレビューできません",
     open: "開く",
     copyPath: "パスをコピー",
+  },
+  checklist: {
+    done: "完了",
+    undo: "戻す",
   },
   action: {
     open: "開く",
@@ -146,6 +155,7 @@ export const ja: Dictionary = {
     tipDrag: "ドラッグで移動",
     tipRestore: "削除しても復元できます",
     tipHotkey: "Ctrl+Shift+Spaceで呼び出し",
+    tipKangaroo: "ファイルはKangaroo Pocketへ",
   },
   alwaysOnTop: {
     on: "最前面 ON",
@@ -266,6 +276,11 @@ export const ja: Dictionary = {
     confirmBody: "付箋やドックをクリックできなくなる場合があります。Ctrl+Shift+Space またはトレイから編集モードに戻せます。",
     confirmOk: "透過モードにする",
     confirmCancel: "やめる",
+    passThroughWarning: "透過モードにすると、付箋やボタンをクリックできなくなります。戻るにはホットキー、またはトレイの Return to Edit Mode を使ってください。",
+  },
+  advanced: {
+    title: "詳細設定",
+    experimental: "実験的",
   },
   launch: {
     title: "起動時の表示",

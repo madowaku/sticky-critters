@@ -125,7 +125,7 @@ export function SettingsDrawer({
     if (displayMode !== "desktop") return;
     
     if (interactionMode === "edit") {
-      const ok = window.confirm(t("interaction.confirmBody"));
+      const ok = window.confirm(t("interaction.passThroughWarning"));
       if (ok) {
         onSetInteractionMode("passThrough");
         onClose();
@@ -180,35 +180,6 @@ export function SettingsDrawer({
                 {alwaysOnTop ? "ON" : "OFF"}
               </button>
             </div>
-            
-            <div className="settings-drawer__row" style={{ marginTop: "8px" }}>
-              <div className="settings-drawer__label-group">
-                <span>{t("interaction.title")}</span>
-                <span className="settings-drawer__hint">
-                  {displayMode === "desktop" ? t("interaction.editHint") : t("interaction.desktopOnly")}
-                </span>
-              </div>
-              <div className="settings-drawer__segmented">
-                <button 
-                  className={`settings-drawer__segmented-btn ${interactionMode === "edit" ? "active" : ""}`}
-                  onClick={() => onSetInteractionMode("edit")}
-                >
-                  Edit
-                </button>
-                <button 
-                  className={`settings-drawer__segmented-btn ${interactionMode === "passThrough" ? "active" : ""}`}
-                  onClick={handleToggleInteraction}
-                  disabled={displayMode !== "desktop"}
-                >
-                  Pass
-                </button>
-              </div>
-            </div>
-            {interactionMode === "passThrough" && (
-              <p className="settings-drawer__warning">
-                ⚠️ {t("interaction.safetyHint")}
-              </p>
-            )}
           </section>
 
           <section className="settings-drawer__section">
@@ -442,6 +413,36 @@ export function SettingsDrawer({
                 📥 {t("backup.import")}
               </button>
             </div>
+          </section>
+
+          <section className="settings-drawer__section">
+            <h4 className="settings-drawer__section-title">{t("advanced.title")}</h4>
+            <div className="settings-drawer__row">
+              <div className="settings-drawer__label-group">
+                <span>{t("advanced.experimental")}: {t("interaction.passThrough")}</span>
+                <span className="settings-drawer__hint">
+                  {displayMode === "desktop" ? t("interaction.safetyHint") : t("interaction.desktopOnly")}
+                </span>
+              </div>
+              <div className="settings-drawer__segmented">
+                <button
+                  className={`settings-drawer__segmented-btn ${interactionMode === "edit" ? "active" : ""}`}
+                  onClick={() => onSetInteractionMode("edit")}
+                >
+                  Edit
+                </button>
+                <button
+                  className={`settings-drawer__segmented-btn ${interactionMode === "passThrough" ? "active" : ""}`}
+                  onClick={handleToggleInteraction}
+                  disabled={displayMode !== "desktop"}
+                >
+                  Pass
+                </button>
+              </div>
+            </div>
+            <p className="settings-drawer__warning">
+              ⚠️ {t("interaction.passThroughWarning")}
+            </p>
           </section>
 
           {/* Storage Section */}

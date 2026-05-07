@@ -11,7 +11,6 @@ import { StashDrawer } from "./components/StashDrawer";
 import { SearchDrawer } from "./components/SearchDrawer";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { DropOverlay } from "./components/DropOverlay";
-import { FileDropTarget } from "./components/FileDropTarget";
 import { SelectionToolbar } from "./components/SelectionToolbar";
 import { GroupFrame } from "./components/GroupFrame";
 import { StickyMap } from "./components/StickyMap";
@@ -1346,7 +1345,6 @@ function App() {
       />
 
       <DropOverlay onFileDrop={handleFileDrop} onPathDrop={handlePathDrop} />
-      <FileDropTarget />
 
       <GoatTrash
         ref={goatRef}

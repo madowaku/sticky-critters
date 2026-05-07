@@ -54,6 +54,7 @@ npm run build
 # デスクトップ版のビルド (.exe / .msi)
 npm run tauri:build
 ```
+`npm run build` はブラウザ用の `dist` を作るだけです。Kangaroo Pocket などを含む Windows アプリ/インストーラーを更新するには、必ず `npm run tauri:build` を実行して新しい `.exe` / `.msi` を入れ直してください。
 ビルドされたファイルは `src-tauri/target/release/bundle/` 内に生成されます。
 
 ## 🐣 最初の使い方

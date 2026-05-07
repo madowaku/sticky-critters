@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import type { StickyNote } from "../types";
 import { copyToClipboard } from "../lib/clipboard";
 import {
@@ -43,6 +43,10 @@ export function StickyNoteCard({
   const [isOverGoat, setIsOverGoat] = useState(false);
   const [alarmPanelOpen, setAlarmPanelOpen] = useState(false);
   const [alarmTime, setAlarmTime] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(note.body);
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === "undefined" ? 1280 : window.innerWidth,
     height: typeof window === "undefined" ? 720 : window.innerHeight,
@@ -69,8 +73,8 @@ export function StickyNoteCard({
       // Only handle left mouse button
       if (e.button !== 0) return;
       const target = e.target as HTMLElement;
-      // Don't drag when clicking buttons
-      if (target.closest("button")) return;
+      // Don't drag when interacting with controls.
+      if (target.closest("button, textarea, input, .sticky-note__menu")) return;
       // Sketch notes reserve the body for drawing; move them from the header.
       if (note.kind === "sketch" && !target.closest(".sticky-note__header")) return;
       // Don't drag if locked
@@ -212,13 +216,159 @@ export function StickyNoteCard({
     }
   };
 
+  const imagePreviewSrc = useMemo(
+    () => getImagePreviewSrc(note.path, note.previewUrl),
+    [note.path, note.previewUrl]
+  );
+  const imagePreviewFailed = !!imagePreviewSrc && failedImageSrc === imagePreviewSrc;
+  const canEditBody = (note.kind === "plain" || note.kind === "code") && !note.locked;
+
+  const startEditing = () => {
+    if (!canEditBody) return;
+    setEditBody(note.body);
+    setEditing(true);
+    setMenuOpen(false);
+  };
+
+  const saveEdit = () => {
+    if (!canEditBody) return;
+    onUpdate(note.id, { body: editBody });
+    setEditing(false);
+  };
+
+  const cancelEdit = () => {
+    setEditBody(note.body);
+    setEditing(false);
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      saveEdit();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  const updateChecklistLine = (lineIndex: number, done: boolean) => {
+    if (note.kind !== "plain" || note.locked) return;
+    const lines = note.body.split("\n");
+    const parsed = parseChecklistLine(lines[lineIndex]);
+    if (!parsed) return;
+    lines[lineIndex] = `- [${done ? "x" : " "}] ${parsed.text}`;
+    onUpdate(note.id, { body: lines.join("\n") });
+  };
+
+  const mainActions = (
+    <>
+      {note.kind === "code" && (
+        <button
+          className="sticky-note__action-btn"
+          onClick={() => handleCopy(note.body)}
+        >
+          📋 {t("action.copy")}
+        </button>
+      )}
+      {note.kind === "url" && (
+        <>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => {
+              openUrl(note.body);
+              onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+            }}
+          >
+            🌐 {t("action.open")}
+          </button>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => handleCopy(note.body)}
+          >
+            📋 {t("action.copy")}
+          </button>
+        </>
+      )}
+      {note.kind === "file" && (
+        <>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => {
+              openFilePath(note.path);
+              onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+            }}
+            disabled={!isFileOpen}
+            title={
+              isDangerousExecutable(note.path || "")
+                ? "Blocked: dangerous executable"
+                : !isFileOpen
+                  ? "Not available in browser mode"
+                  : "Open file"
+            }
+          >
+            📂 {t("action.open")}
+          </button>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => handleCopy(note.path || note.body)}
+          >
+            📋 {t("action.copyPath")}
+          </button>
+        </>
+      )}
+      {note.kind === "folder" && (
+        <>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => {
+              openFolderPath(note.path);
+              onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+            }}
+            disabled={!isFolderOpen}
+            title={!isFolderOpen ? "Not available in browser mode" : "Open folder"}
+          >
+            📂 {t("action.open")}
+          </button>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => handleCopy(note.path || note.body)}
+          >
+            📋 {t("action.copyPath")}
+          </button>
+        </>
+      )}
+      {note.kind === "image" && (
+        <>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => {
+              openFilePath(note.path);
+              onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+            }}
+            disabled={!isImageOpen}
+            title={!isImageOpen ? t("image.previewUnavailable") : t("image.open")}
+          >
+            📂 {t("image.open")}
+          </button>
+          <button
+            className="sticky-note__action-btn"
+            onClick={() => handleCopy(note.path || note.body)}
+          >
+            📋 {t("image.copyPath")}
+          </button>
+        </>
+      )}
+    </>
+  );
+
   return (
     <div
       ref={cardRef}
       className={`sticky-note sticky-note--${note.color} sticky-note--${note.kind} sticky-note--${note.size} ${isDragging ? "sticky-note--dragging" : ""} ${isOverGoat ? "sticky-note--over-goat" : ""} ${note.locked ? "sticky-note--locked" : ""} ${isSelected ? "sticky-note--selected" : ""}`}
       style={{
         width: noteWidth,
-        minHeight: 120,
+        minHeight: note.kind === "sketch" ? 120 : 96,
         position: "absolute",
         left: displayX,
         top: displayY,
@@ -240,41 +390,99 @@ export function StickyNoteCard({
           <span className="sticky-note__title">{getDisplayTitle(note)}</span>
         )}
         <div className="sticky-note__header-actions">
-          <button 
-            className="sticky-note__btn sticky-note__btn--lock"
-            onClick={() => onUpdate(note.id, { locked: !note.locked })}
-            title={note.locked ? t("lock.unlock") : t("lock.lock")}
-          >
-            {note.locked ? "🔒" : "🔓"}
-          </button>
-          <button
-            className="sticky-note__btn sticky-note__btn--size"
-            onClick={toggleSize}
-            title={note.size === "wide" ? t("note.normalSize") : t("note.wideSize")}
-          >
-            {note.size === "wide" ? "▫" : "▪"}
-          </button>
-          {!note.locked && (
+          {canEditBody && (
             <button
-              className="sticky-note__btn sticky-note__btn--close"
-              onClick={() => onDelete(note.id, "manual")}
-              title={t("action.delete")}
+              className="sticky-note__btn"
+              onClick={startEditing}
+              title={t("note.edit")}
             >
-              ×
+              ✎
             </button>
           )}
+          <button
+            className="sticky-note__btn"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            title={t("note.more")}
+            aria-expanded={menuOpen}
+          >
+            …
+          </button>
         </div>
       </div>
 
+      {menuOpen && (
+        <div className="sticky-note__menu" onPointerDown={(e) => e.stopPropagation()}>
+          {canEditBody && (
+            <button onClick={startEditing}>✎ {t("note.edit")}</button>
+          )}
+          <button onClick={toggleSize}>
+            {note.size === "wide" ? "▫" : "▪"} {note.size === "wide" ? t("note.normalSize") : t("note.wideSize")}
+          </button>
+          <button onClick={() => onUpdate(note.id, { locked: !note.locked })}>
+            {note.locked ? "🔒" : "🔓"} {note.locked ? t("lock.unlock") : t("lock.lock")}
+          </button>
+          <button
+            onClick={() => {
+              if (note.alarmAt) {
+                const d = new Date(note.alarmAt);
+                const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                setAlarmTime(localIso);
+              }
+              setAlarmPanelOpen(true);
+              setMenuOpen(false);
+            }}
+            disabled={note.locked}
+          >
+            🐔 {t("alarm.set")}
+          </button>
+          <button onClick={toggleTodayOnly} disabled={note.locked} title={t("temporary.todayOnlyHint")}>
+            📅 {t("temporary.todayOnly")}
+          </button>
+          <button
+            onClick={() => onUpdate(note.id, { stashedAt: new Date().toISOString() })}
+            disabled={note.locked}
+          >
+            🐹 {t("stash.stash")}
+          </button>
+          <button
+            className="sticky-note__menu-danger"
+            onClick={() => onDelete(note.id, "manual")}
+            disabled={note.locked}
+          >
+            × {t("action.delete")}
+          </button>
+        </div>
+      )}
+
       {/* Body */}
       <div className="sticky-note__body">
-        {note.kind === "code" && (
+        {editing && (note.kind === "plain" || note.kind === "code") && (
+          <div className="sticky-note__editor">
+            <textarea
+              className="sticky-note__textarea"
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              onKeyDown={handleEditKeyDown}
+              autoFocus
+            />
+            <div className="sticky-note__edit-hint">{t("note.editHint")}</div>
+            <div className="sticky-note__edit-actions">
+              <button className="sticky-note__action-btn" onClick={cancelEdit}>
+                {t("note.cancel")}
+              </button>
+              <button className="sticky-note__action-btn sticky-note__action-btn--active" onClick={saveEdit}>
+                {t("note.save")}
+              </button>
+            </div>
+          </div>
+        )}
+        {!editing && note.kind === "code" && (
           <pre className="sticky-note__code">{note.body}</pre>
         )}
-        {note.kind === "url" && (
+        {!editing && note.kind === "url" && (
           <div className="sticky-note__url">{note.body}</div>
         )}
-        {note.kind === "file" && (
+        {!editing && note.kind === "file" && (
           <div className="sticky-note__file">
             <span className="sticky-note__file-name">
               {getBaseName(note.path || note.body)}
@@ -284,7 +492,7 @@ export function StickyNoteCard({
             )}
           </div>
         )}
-        {note.kind === "folder" && (
+        {!editing && note.kind === "folder" && (
           <div className="sticky-note__file">
             <span className="sticky-note__file-name">
               {getBaseName(note.path || note.body)}
@@ -294,29 +502,47 @@ export function StickyNoteCard({
             )}
           </div>
         )}
-        {note.kind === "image" && (
+        {!editing && note.kind === "image" && (
           <div className="sticky-note__image-container">
-            {getImagePreviewSrc(note.path, note.previewUrl) ? (
+            {imagePreviewSrc && !imagePreviewFailed ? (
               <img 
-                src={getImagePreviewSrc(note.path, note.previewUrl)} 
+                src={imagePreviewSrc}
                 alt={note.title} 
                 className="sticky-note__image"
                 draggable={false}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                  console.warn("[imagePreview] Failed to load image preview", {
+                    noteId: note.id,
+                    path: note.path,
+                    previewUrl: note.previewUrl,
+                    src: imagePreviewSrc,
+                    error: e.currentTarget.currentSrc,
+                  });
+                  setFailedImageSrc(imagePreviewSrc);
                 }}
               />
             ) : null}
-            <div className={`sticky-note__image-placeholder ${getImagePreviewSrc(note.path, note.previewUrl) ? "hidden" : ""}`}>
+            <div className={`sticky-note__image-placeholder ${imagePreviewSrc && !imagePreviewFailed ? "hidden" : ""}`}>
               🖼️ {t("image.previewUnavailable")}
             </div>
           </div>
         )}
-        {note.kind === "plain" && (
-          <div className="sticky-note__text">{note.body}</div>
+        {!editing && note.kind === "plain" && (
+          <div className="sticky-note__text">
+            {note.body.split("\n").map((line, index) => (
+              <PlainTextLine
+                key={`${index}-${line}`}
+                line={line}
+                lineIndex={index}
+                locked={!!note.locked}
+                onToggle={updateChecklistLine}
+                doneLabel={t("checklist.done")}
+                undoLabel={t("checklist.undo")}
+              />
+            ))}
+          </div>
         )}
-        {note.kind === "sketch" && (
+        {!editing && note.kind === "sketch" && (
           <SketchCanvas note={note} onUpdate={onUpdate} locked={note.locked} />
         )}
       </div>
@@ -337,136 +563,7 @@ export function StickyNoteCard({
 
       {/* Actions */}
       <div className="sticky-note__actions">
-        {note.kind === "code" && (
-          <button
-            className="sticky-note__action-btn"
-            onClick={() => handleCopy(note.body)}
-          >
-            📋 {t("action.copy")}
-          </button>
-        )}
-        {note.kind === "url" && (
-          <>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => {
-                openUrl(note.body);
-                onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
-              }}
-            >
-              🌐 {t("action.open")}
-            </button>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => handleCopy(note.body)}
-            >
-              📋 {t("action.copy")}
-            </button>
-          </>
-        )}
-        {note.kind === "file" && (
-          <>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => {
-                openFilePath(note.path);
-                onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
-              }}
-              disabled={!isFileOpen}
-              title={
-                isDangerousExecutable(note.path || "")
-                  ? "Blocked: dangerous executable"
-                  : !isFileOpen
-                    ? "Not available in browser mode"
-                    : "Open file"
-              }
-            >
-              📂 {t("action.open")}
-            </button>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => handleCopy(note.path || note.body)}
-            >
-              📋 {t("action.copyPath")}
-            </button>
-          </>
-        )}
-        {note.kind === "folder" && (
-          <>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => {
-                openFolderPath(note.path);
-                onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
-              }}
-              disabled={!isFolderOpen}
-              title={
-                !isFolderOpen ? "Not available in browser mode" : "Open folder"
-              }
-            >
-              📂 {t("action.open")}
-            </button>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => handleCopy(note.path || note.body)}
-            >
-              📋 {t("action.copyPath")}
-            </button>
-          </>
-        )}
-        {note.kind === "image" && (
-          <>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => {
-                openFilePath(note.path);
-                onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
-              }}
-              disabled={!isImageOpen}
-              title={!isImageOpen ? t("image.previewUnavailable") : t("image.open")}
-            >
-              📂 {t("image.open")}
-            </button>
-            <button
-              className="sticky-note__action-btn"
-              onClick={() => handleCopy(note.path || note.body)}
-            >
-              📋 {t("image.copyPath")}
-            </button>
-          </>
-        )}
-
-        <button
-          className={`sticky-note__action-btn ${note.alarmAt ? "sticky-note__action-btn--active" : ""}`}
-          onClick={() => {
-            if (note.alarmAt) {
-              const d = new Date(note.alarmAt);
-              // Local ISO string for datetime-local input
-              const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-              setAlarmTime(localIso);
-            }
-            setAlarmPanelOpen(!alarmPanelOpen);
-          }}
-        >
-          🐔 {t("alarm.set")}
-        </button>
-
-        <button
-          className={`sticky-note__action-btn ${note.expiresAt ? "sticky-note__action-btn--active" : ""}`}
-          onClick={toggleTodayOnly}
-          title={t("temporary.todayOnlyHint")}
-        >
-          📅 {t("temporary.todayOnly")}
-        </button>
-
-        <button
-          className="sticky-note__action-btn"
-          onClick={() => onUpdate(note.id, { stashedAt: new Date().toISOString() })}
-          title={t("stash.stash")}
-          disabled={note.locked}
-        >
-          🐹 {t("stash.stashShort")}
-        </button>
+        {!editing && mainActions}
 
         {/* Copy feedback */}
         {copyFeedback && (
@@ -522,4 +619,60 @@ function getDisplayTitle(note: StickyNote): string {
     default:
       return "";
   }
+}
+
+type ChecklistLine = {
+  done: boolean;
+  text: string;
+};
+
+function parseChecklistLine(line: string): ChecklistLine | null {
+  const checked = line.match(/^\s*[-*・]\s*\[(x|X| )\]\s+(.+)$/);
+  if (checked) {
+    return { done: checked[1].toLowerCase() === "x", text: checked[2] };
+  }
+
+  const bullet = line.match(/^\s*[-*・]\s+(.+)$/);
+  if (bullet) {
+    return { done: false, text: bullet[1] };
+  }
+
+  return null;
+}
+
+function PlainTextLine({
+  line,
+  lineIndex,
+  locked,
+  onToggle,
+  doneLabel,
+  undoLabel,
+}: {
+  line: string;
+  lineIndex: number;
+  locked: boolean;
+  onToggle: (lineIndex: number, done: boolean) => void;
+  doneLabel: string;
+  undoLabel: string;
+}) {
+  const parsed = parseChecklistLine(line);
+
+  if (!parsed) {
+    return <div className="sticky-note__text-line">{line || "\u00a0"}</div>;
+  }
+
+  return (
+    <div className={`sticky-note__checkline ${parsed.done ? "sticky-note__checkline--done" : ""}`}>
+      <button
+        className="sticky-note__check-btn"
+        disabled={locked}
+        onClick={() => onToggle(lineIndex, !parsed.done)}
+        title={parsed.done ? undoLabel : doneLabel}
+        aria-label={parsed.done ? undoLabel : doneLabel}
+      >
+        {parsed.done ? "↶" : "✓"}
+      </button>
+      <span className="sticky-note__check-text">{parsed.text}</span>
+    </div>
+  );
 }

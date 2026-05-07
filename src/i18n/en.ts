@@ -17,11 +17,20 @@ export const en = {
     dragHandle: "Drag this header to move",
     wideSize: "Make wider",
     normalSize: "Back to normal size",
+    edit: "Edit",
+    save: "Save",
+    cancel: "Cancel",
+    editHint: "Ctrl+Enter to save / Esc to cancel",
+    more: "More",
   },
   image: {
     previewUnavailable: "Preview unavailable",
     open: "Open",
     copyPath: "Copy Path",
+  },
+  checklist: {
+    done: "Done",
+    undo: "Undo",
   },
   action: {
     open: "Open",
@@ -144,6 +153,7 @@ export const en = {
     tipDrag: "Drag to move",
     tipRestore: "Deleted notes can be restored",
     tipHotkey: "Recall with Ctrl+Shift+Space",
+    tipKangaroo: "Drop files into Kangaroo Pocket",
   },
   alwaysOnTop: {
     on: "On top",
@@ -264,6 +274,11 @@ export const en = {
     confirmBody: "You may not be able to click notes or the dock. Use Ctrl+Shift+Space or the tray to return to Edit mode.",
     confirmOk: "Enable pass-through",
     confirmCancel: "Cancel",
+    passThroughWarning: "In pass-through mode, you may not be able to click notes or buttons. Use the hotkey or the tray menu to return to Edit Mode.",
+  },
+  advanced: {
+    title: "Advanced",
+    experimental: "Experimental",
   },
   launch: {
     title: "Launch behavior",
