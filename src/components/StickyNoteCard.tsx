@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
-import type { StickyNote } from "../types";
+import type { BundleItem, StickyNote } from "../types";
 import { copyToClipboard } from "../lib/clipboard";
 import {
   openUrl,
@@ -167,6 +167,7 @@ export function StickyNoteCard({
   const isFileOpen = note.kind === "file" && canOpenPath(note.path);
   const isFolderOpen = note.kind === "folder" && canOpenFolderPath(note.path);
   const isImageOpen = note.kind === "image" && canOpenPath(note.path);
+  const bundleItems = note.bundleItems || [];
 
   const kindHeader: Record<string, string> = {
     plain: `📝 ${t("note.memo")}`,
@@ -176,6 +177,7 @@ export function StickyNoteCard({
     folder: `🕳️ ${t("note.folder")}`,
     image: `🖼️ ${t("note.image")}`,
     sketch: `✍️ ${t("note.sketch")}`,
+    bundle: `📦 ${t("note.bundle")}`,
   };
 
   const handleAlarmSave = () => {
@@ -259,6 +261,29 @@ export function StickyNoteCard({
     if (!parsed) return;
     lines[lineIndex] = `- [${done ? "x" : " "}] ${parsed.text}`;
     onUpdate(note.id, { body: lines.join("\n") });
+  };
+
+  const handleOpenBundleItem = async (item: BundleItem) => {
+    if (item.kind === "folder") {
+      await openFolderPath(item.path);
+      onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+      return;
+    }
+
+    if (item.kind === "file" || item.kind === "image") {
+      if (isDangerousExecutable(item.path || item.name)) {
+        console.warn("[bundle] BLOCKED: dangerous executable:", item.path);
+        return;
+      }
+      await openFilePath(item.path);
+      onUpdate(note.id, { lastInteractedAt: new Date().toISOString() });
+    }
+  };
+
+  const canOpenBundleItem = (item: BundleItem) => {
+    if (item.kind === "folder") return canOpenFolderPath(item.path);
+    if (item.kind === "file" || item.kind === "image") return canOpenPath(item.path);
+    return false;
   };
 
   const mainActions = (
@@ -359,6 +384,15 @@ export function StickyNoteCard({
           </button>
         </>
       )}
+      {note.kind === "bundle" && (
+        <button
+          className="sticky-note__action-btn"
+          onClick={() => handleCopy(bundleItems.map((item) => item.path).join("\n"))}
+          disabled={bundleItems.length === 0}
+        >
+          📋 {t("bundle.copyAllPaths")}
+        </button>
+      )}
     </>
   );
 
@@ -368,7 +402,7 @@ export function StickyNoteCard({
       className={`sticky-note sticky-note--${note.color} sticky-note--${note.kind} sticky-note--${note.size} ${isDragging ? "sticky-note--dragging" : ""} ${isOverGoat ? "sticky-note--over-goat" : ""} ${note.locked ? "sticky-note--locked" : ""} ${isSelected ? "sticky-note--selected" : ""}`}
       style={{
         width: noteWidth,
-        minHeight: note.kind === "sketch" ? 120 : 96,
+        minHeight: note.kind === "bundle" ? 220 : note.kind === "sketch" ? 120 : 96,
         position: "absolute",
         left: displayX,
         top: displayY,
@@ -527,6 +561,51 @@ export function StickyNoteCard({
             </div>
           </div>
         )}
+        {!editing && note.kind === "bundle" && (
+          <div className="sticky-note__bundle">
+            <div className="sticky-note__bundle-count">
+              {t("bundle.itemCount").replace("{count}", String(bundleItems.length))}
+            </div>
+            {bundleItems.length === 0 ? (
+              <div className="sticky-note__bundle-empty">{t("bundle.empty")}</div>
+            ) : (
+              <div className="sticky-note__bundle-list">
+                {bundleItems.map((item) => {
+                  const blocked = item.kind !== "folder" && isDangerousExecutable(item.path || item.name);
+                  const canOpen = canOpenBundleItem(item) && !blocked;
+                  return (
+                    <div key={item.id} className="sticky-note__bundle-item">
+                      <span className="sticky-note__bundle-icon" aria-hidden="true">
+                        {getBundleItemIcon(item.kind)}
+                      </span>
+                      <div className="sticky-note__bundle-main">
+                        <div className="sticky-note__bundle-name">{item.name || getBaseName(item.path)}</div>
+                        <div className="sticky-note__bundle-path" title={item.path}>
+                          {shortenPath(item.path)}
+                        </div>
+                      </div>
+                      <button
+                        className="sticky-note__bundle-open"
+                        onClick={() => handleOpenBundleItem(item)}
+                        disabled={!canOpen}
+                        title={blocked ? t("bundle.dangerousBlocked") : t("bundle.open")}
+                      >
+                        {t("bundle.open")}
+                      </button>
+                      <button
+                        className="sticky-note__bundle-copy"
+                        onClick={() => handleCopy(item.path)}
+                        title={t("action.copyPath")}
+                      >
+                        📋
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {!editing && note.kind === "plain" && (
           <div className="sticky-note__text">
             {note.body.split("\n").map((line, index) => (
@@ -614,11 +693,34 @@ function getDisplayTitle(note: StickyNote): string {
     case "folder":
     case "image":
       return getBaseName(note.path || note.body);
+    case "bundle":
+      return (note.bundleItems?.[0]?.name || note.body.split("\n")[0] || "").trim();
     case "code":
     case "plain":
     default:
       return "";
   }
+}
+
+function getBundleItemIcon(kind: BundleItem["kind"]): string {
+  switch (kind) {
+    case "folder":
+      return "📁";
+    case "image":
+      return "🖼️";
+    case "file":
+      return "📄";
+    default:
+      return "❔";
+  }
+}
+
+function shortenPath(path: string): string {
+  if (!path) return "";
+  const normalized = path.replace(/\\/g, "/");
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.length <= 3) return path;
+  return `.../${parts.slice(-3).join("/")}`;
 }
 
 type ChecklistLine = {

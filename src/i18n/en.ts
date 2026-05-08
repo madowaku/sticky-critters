@@ -14,6 +14,7 @@ export const en = {
     codeSnippet: "Code Snippet",
     image: "Image",
     sketch: "Sketch",
+    bundle: "Bundle",
     dragHandle: "Drag this header to move",
     wideSize: "Make wider",
     normalSize: "Back to normal size",
@@ -27,6 +28,13 @@ export const en = {
     previewUnavailable: "Preview unavailable",
     open: "Open",
     copyPath: "Copy Path",
+  },
+  bundle: {
+    open: "Open",
+    copyAllPaths: "Copy all paths",
+    empty: "No items",
+    itemCount: "{count} items",
+    dangerousBlocked: "Blocked for safety",
   },
   checklist: {
     done: "Done",

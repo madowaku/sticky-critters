@@ -1,4 +1,4 @@
-import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup } from "../types";
+import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, BundleItem } from "../types";
 import { isUrl } from "./noteDetection";
 
 const STORAGE_KEY = "sticky-critters-notes";
@@ -290,6 +290,7 @@ export function createNoteDraft(input: {
   expiresAt?: string;
   reviewAfter?: string;
   previewUrl?: string;
+  bundleItems?: BundleItem[];
 }): StickyNote {
   const now = new Date().toISOString();
   const jitterX = Math.random() * 120 - 60;
@@ -312,5 +313,6 @@ export function createNoteDraft(input: {
     expiresAt: input.expiresAt,
     reviewAfter: input.reviewAfter,
     previewUrl: input.previewUrl,
+    bundleItems: input.bundleItems,
   };
 }

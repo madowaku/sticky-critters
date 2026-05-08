@@ -14,8 +14,8 @@ import { DropOverlay } from "./components/DropOverlay";
 import { SelectionToolbar } from "./components/SelectionToolbar";
 import { GroupFrame } from "./components/GroupFrame";
 import { StickyMap } from "./components/StickyMap";
-import { getBaseName, isDangerousExecutable, isImageFile } from "./lib/pathUtils";
-import type { NoteColor, NoteKind } from "./types";
+import { getBaseName, getExtension, isDangerousExecutable, isImageFile } from "./lib/pathUtils";
+import type { BundleItem, NoteColor, NoteKind } from "./types";
 import { useTranslation } from "./i18n/I18nContext";
 import { getCurrentWindow, LogicalSize, LogicalPosition } from "@tauri-apps/api/window";
 import { 
@@ -41,6 +41,21 @@ const WINDOWS_PATH_RE = /^(?:[a-zA-Z]:[\\/]|\\\\[^\\/]+[\\/][^\\/]+)/;
 function isLikelyPathInput(value: string): boolean {
   const trimmed = value.trim();
   return !trimmed.includes("\n") && WINDOWS_PATH_RE.test(trimmed);
+}
+
+function getBundleTitle(items: BundleItem[]): string {
+  const firstFolder = items.find((item) => item.kind === "folder");
+  return firstFolder?.name || "作業セット";
+}
+
+function getBundleInput(items: BundleItem[]) {
+  return {
+    kind: "bundle" as const,
+    title: getBundleTitle(items),
+    body: items.map((item) => item.path).join("\n"),
+    bundleItems: items,
+    size: "wide" as const,
+  };
 }
 
 function App() {
@@ -993,6 +1008,22 @@ function App() {
 
   const handleFileDrop = useCallback(
     (files: FileList) => {
+      if (files.length > 1) {
+        const bundleItems: BundleItem[] = Array.from(files).map((file) => {
+          const dropped = file as DroppedFile;
+          const filePath = dropped.path || dropped.name;
+          return {
+            id: crypto.randomUUID(),
+            path: filePath,
+            name: dropped.name || getBaseName(filePath),
+            kind: isImageFile(filePath) ? "image" : "file",
+            extension: getExtension(filePath).replace(/^\./, "") || undefined,
+          };
+        });
+        addNote(getBundleInput(bundleItems));
+        return;
+      }
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i] as DroppedFile;
         const fileName = file.name;
@@ -1026,6 +1057,18 @@ function App() {
 
   const handlePathDrop = useCallback(
     (infos: DroppedPathInfo[]) => {
+      if (infos.length > 1) {
+        const bundleItems: BundleItem[] = infos.map((info) => ({
+          id: crypto.randomUUID(),
+          path: info.path,
+          name: info.name || getBaseName(info.path),
+          kind: info.kind === "file" && info.isImage ? "image" : info.kind,
+          extension: info.extension,
+        }));
+        addNote(getBundleInput(bundleItems));
+        return;
+      }
+
       infos.forEach((info) => {
         const fileName = info.name || getBaseName(info.path);
 

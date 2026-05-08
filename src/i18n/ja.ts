@@ -16,6 +16,7 @@ export const ja: Dictionary = {
     codeSnippet: "コード片",
     image: "画像",
     sketch: "スケッチ",
+    bundle: "ファイル束",
     dragHandle: "ここをドラッグして移動",
     wideSize: "横長にする",
     normalSize: "ふつうの幅に戻す",
@@ -29,6 +30,13 @@ export const ja: Dictionary = {
     previewUnavailable: "プレビューできません",
     open: "開く",
     copyPath: "パスをコピー",
+  },
+  bundle: {
+    open: "開く",
+    copyAllPaths: "すべてのパスをコピー",
+    empty: "項目がありません",
+    itemCount: "{count}件",
+    dangerousBlocked: "安全のため開けません",
   },
   checklist: {
     done: "完了",

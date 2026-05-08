@@ -35,12 +35,7 @@ export function SearchDrawer({
     const q = query.toLowerCase().trim();
     if (!q) return { active: [], stashed: [], deleted: [] };
 
-    const filtered = notes.filter(n => {
-      const body = n.body.toLowerCase();
-      const title = (n.title || "").toLowerCase();
-      const path = (n.path || "").toLowerCase();
-      return body.includes(q) || title.includes(q) || path.includes(q);
-    });
+    const filtered = notes.filter(n => getSearchText(n).includes(q));
 
     return {
       active: filtered.filter(n => !n.deletedAt && !n.stashedAt),
@@ -101,12 +96,7 @@ export function SearchDrawer({
       </div>
       <div className="search-drawer__item-body">
         {note.title && <div className="search-drawer__item-title">{note.title}</div>}
-        <div className="search-drawer__item-text">
-          {note.kind === "file" || note.kind === "folder" || note.kind === "image"
-            ? getBaseName(note.path || note.body)
-            : note.body.slice(0, 100) + (note.body.length > 100 ? "..." : "")
-          }
-        </div>
+        <div className="search-drawer__item-text">{getNotePreview(note, t)}</div>
       </div>
     </div>
   );
@@ -206,4 +196,26 @@ export function SearchDrawer({
       </div>
     </div>
   );
+}
+
+function getSearchText(note: StickyNote): string {
+  const bundleText = (note.bundleItems || [])
+    .map((item) => `${item.name} ${item.path}`)
+    .join("\n");
+  return `${note.title || ""}\n${note.body}\n${note.path || ""}\n${bundleText}`.toLowerCase();
+}
+
+function getNotePreview(note: StickyNote, t: (key: string) => string): string {
+  if (note.kind === "bundle") {
+    const count = note.bundleItems?.length || 0;
+    const firstItems = (note.bundleItems || []).slice(0, 3).map((item) => item.name || getBaseName(item.path));
+    const countLabel = t("bundle.itemCount").replace("{count}", String(count));
+    return `📦 ${t("note.bundle")} · ${countLabel}${firstItems.length ? `\n${firstItems.join("\n")}` : ""}`;
+  }
+
+  if (note.kind === "file" || note.kind === "folder" || note.kind === "image") {
+    return getBaseName(note.path || note.body);
+  }
+
+  return note.body.slice(0, 100) + (note.body.length > 100 ? "..." : "");
 }

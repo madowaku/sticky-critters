@@ -16,6 +16,12 @@ Sticky Critters is a "cute but powerful" desktop sticky note application designe
 - **Desktop Mode**: Borderless, click-through-capable mode for a truly integrated desktop experience.
 - **Kangaroo Pocket**: Open a small drop target from the tray menu, then drop files, folders, or images to turn them into sticky notes.
 
+### Added in v0.1.1 Beta
+- **Bundle Note**: When multiple files, folders, or images are dropped together, Sticky Critters can collect them into one sticky note.
+  - Each item can be opened or copied individually.
+  - Folders open as folders, while images and files use the existing safe open guard.
+  - Dangerous executable files remain blocked for safety.
+
 ### Safety First
 - **No File Deletion**: We only manage links. Your original files are safe.
 - **No Command Execution**: We don't run scripts or commands.

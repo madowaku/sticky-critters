@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { loadAllNotes, loadAllGroups, saveAllNotes, createNoteDraft, migrateLocalStorageToFileIfNeeded } from "../lib/storage";
-import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, InkStroke } from "../types";
+import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, InkStroke, BundleItem } from "../types";
 import { detectNoteKind } from "../lib/noteDetection";
 
 export function useStickyNotes() {
@@ -56,6 +56,7 @@ export function useStickyNotes() {
       previewUrl?: string;
       inkStrokes?: InkStroke[];
       sketchBackground?: "plain" | "grid" | "lined";
+      bundleItems?: BundleItem[];
     }) => {
       const kind = input.kind ?? detectNoteKind(input.body);
       

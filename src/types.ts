@@ -1,6 +1,14 @@
-export type NoteKind = "plain" | "code" | "url" | "file" | "folder" | "image" | "sketch";
+export type NoteKind = "plain" | "code" | "url" | "file" | "folder" | "image" | "sketch" | "bundle";
 export type NoteColor = "yellow" | "blue" | "pink" | "green" | "gray" | "purple";
 export type NoteSize = "normal" | "wide";
+
+export type BundleItem = {
+  id: string;
+  path: string;
+  name: string;
+  kind: "file" | "folder" | "image" | "unknown";
+  extension?: string;
+};
 
 export type InkPoint = {
   x: number;
@@ -50,6 +58,7 @@ export type StickyNote = {
   locked?: boolean;
   previewUrl?: string;
   groupId?: string;
+  bundleItems?: BundleItem[];
 };
 
 export type NoteGroup = {

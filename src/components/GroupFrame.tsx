@@ -20,6 +20,7 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
+    if (isGroupControlTarget(e.target)) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -36,23 +37,41 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
 
   const handlePointerUp = (e: React.PointerEvent) => {
     setIsDragging(false);
-    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
-  const handleRename = () => {
+  const stopControlPointer = (e: React.PointerEvent) => {
+    e.stopPropagation();
+  };
+
+  const stopControlClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleRename = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const next = window.prompt(t("group.rename"), group.title);
     if (next !== null) {
       onUpdate(group.id, { title: next || t("group.defaultTitle") });
     }
   };
 
-  const toggleCollapse = () => {
+  const toggleCollapse = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     onUpdate(group.id, { collapsed: !group.collapsed });
   };
 
-  const handleColorChange = (color: NoteColor) => {
+  const handleColorChange = (color: NoteColor, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     onUpdate(group.id, { color });
     setShowColors(false);
+  };
+
+  const handleToggleColors = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowColors((next) => !next);
   };
 
   const colorClass = group.color ? `group-frame--${group.color}` : "group-frame--gray";
@@ -64,12 +83,12 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
         style={{ left: group.x, top: group.y }}
       >
         <div className="group-frame__header" onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
-          <button className="group-frame__toggle" onClick={toggleCollapse}>
+          <button className="group-frame__toggle" onPointerDown={stopControlPointer} onClick={toggleCollapse}>
             ▶️
           </button>
           <span className="group-frame__title" title={group.title}>{group.title}</span>
-          <div className="group-frame__actions">
-            <button className="group-frame__btn" onClick={() => setShowColors(!showColors)} title={t("group.colorChange")}>
+          <div className="group-frame__actions" onPointerDown={stopControlPointer} onClick={stopControlClick}>
+            <button className="group-frame__btn" onClick={handleToggleColors} title={t("group.colorChange")}>
               🎨
             </button>
             <button className="group-frame__btn" onClick={() => onSelectNotes(group.id)} title={t("group.selectNotes")}>
@@ -81,12 +100,12 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
           </div>
         </div>
         {showColors && (
-          <div className="group-frame__colors">
+          <div className="group-frame__colors" onPointerDown={stopControlPointer} onClick={stopControlClick}>
             {(["yellow", "blue", "pink", "green", "gray", "purple"] as NoteColor[]).map(c => (
               <div 
                 key={c} 
                 className={`group-frame__color-dot group-frame__color-dot--${c}`}
-                onClick={() => handleColorChange(c)}
+                onClick={(e) => handleColorChange(c, e)}
               />
             ))}
           </div>
@@ -106,14 +125,14 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
       }}
     >
       <div className="group-frame__header" onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
-        <button className="group-frame__toggle" onClick={toggleCollapse}>
+        <button className="group-frame__toggle" onPointerDown={stopControlPointer} onClick={toggleCollapse}>
           ▼
         </button>
         <span className="group-frame__title" onDoubleClick={handleRename}>
           {group.title}
         </span>
-        <div className="group-frame__actions">
-          <button className="group-frame__btn" onClick={() => setShowColors(!showColors)} title={t("group.colorChange")}>
+        <div className="group-frame__actions" onPointerDown={stopControlPointer} onClick={stopControlClick}>
+          <button className="group-frame__btn" onClick={handleToggleColors} title={t("group.colorChange")}>
             🎨
           </button>
           <button className="group-frame__btn" onClick={() => onSelectNotes(group.id)} title={t("group.selectNotes")}>
@@ -138,16 +157,20 @@ export function GroupFrame({ group, onUpdate, onDelete, onMove, onSelectNotes, o
       </div>
       <div className="group-frame__body" />
       {showColors && (
-        <div className="group-frame__colors">
+        <div className="group-frame__colors" onPointerDown={stopControlPointer} onClick={stopControlClick}>
           {(["yellow", "blue", "pink", "green", "gray", "purple"] as NoteColor[]).map(c => (
             <div 
               key={c} 
               className={`group-frame__color-dot group-frame__color-dot--${c}`}
-              onClick={() => handleColorChange(c)}
+              onClick={(e) => handleColorChange(c, e)}
             />
           ))}
         </div>
       )}
     </div>
   );
+}
+
+function isGroupControlTarget(target: EventTarget): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("button, .group-frame__actions, .group-frame__colors"));
 }
