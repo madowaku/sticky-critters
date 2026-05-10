@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
-import type { StickyNote } from "../types";
+import type { NoteCardSize, StickyNote } from "../types";
 import { StickyNoteCard } from "./StickyNoteCard";
 import { useTranslation } from "../i18n/I18nContext";
+import { getNoteDimensions } from "../lib/noteLayout";
 
 interface Props {
   notes: StickyNote[];
@@ -17,11 +18,12 @@ interface Props {
   onOpenSettings: () => void;
   selectedNoteIds: string[];
   goatRef: React.RefObject<HTMLDivElement | null>;
+  noteCardSize: NoteCardSize;
   onNoteDragStart?: (size: { width: number; height: number }) => void;
   onNoteDragEnd?: () => void;
 }
 
-export function StickyBoard({ notes, onMove, onDelete, onUpdate, onSelect, onRectangleSelect, onClearSelection, onAddText, onAddSketch, onClipboardAdd, onOpenSettings, selectedNoteIds, goatRef, onNoteDragStart, onNoteDragEnd }: Props) {
+export function StickyBoard({ notes, onMove, onDelete, onUpdate, onSelect, onRectangleSelect, onClearSelection, onAddText, onAddSketch, onClipboardAdd, onOpenSettings, selectedNoteIds, goatRef, noteCardSize, onNoteDragStart, onNoteDragEnd }: Props) {
   const { t } = useTranslation();
   const [selection, setSelection] = useState<{ start: { x: number; y: number }; end: { x: number; y: number } } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -70,9 +72,7 @@ export function StickyBoard({ notes, onMove, onDelete, onUpdate, onSelect, onRec
         .filter(note => {
           if (note.deletedAt || note.stashedAt) return false;
           
-          const noteWidth = note.size === "wide" ? 360 : 280;
-          // Heuristic height if not available
-          const noteHeight = 160; 
+          const { width: noteWidth, height: noteHeight } = getNoteDimensions(note, noteCardSize);
 
           const noteRect = {
             left: note.x,
@@ -145,6 +145,7 @@ export function StickyBoard({ notes, onMove, onDelete, onUpdate, onSelect, onRec
           onDragEnd={onNoteDragEnd}
           isSelected={selectedNoteIds.includes(note.id)}
           goatRef={goatRef}
+          noteCardSize={noteCardSize}
         />
       ))}
 

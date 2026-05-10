@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
-import type { BundleItem, StickyNote } from "../types";
+import type { BundleItem, NoteCardSize, StickyNote } from "../types";
 import { copyToClipboard } from "../lib/clipboard";
 import {
   openUrl,
@@ -12,6 +12,7 @@ import { getBaseName, isDangerousExecutable } from "../lib/pathUtils";
 import { useTranslation } from "../i18n/I18nContext";
 import { getImagePreviewSrc } from "../lib/imagePreview";
 import { SketchCanvas } from "./SketchCanvas";
+import { clampNoteDimensions, getNoteDimensions } from "../lib/noteLayout";
 
 interface Props {
   note: StickyNote;
@@ -23,6 +24,7 @@ interface Props {
   onDragEnd?: () => void;
   isSelected: boolean;
   goatRef: React.RefObject<HTMLDivElement | null>;
+  noteCardSize: NoteCardSize;
 }
 
 export function StickyNoteCard({
@@ -35,6 +37,7 @@ export function StickyNoteCard({
   onDragEnd,
   isSelected,
   goatRef,
+  noteCardSize,
 }: Props) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,8 @@ export function StickyNoteCard({
   const [alarmTime, setAlarmTime] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [editBody, setEditBody] = useState(note.body);
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const [viewport, setViewport] = useState(() => ({
@@ -52,6 +57,8 @@ export function StickyNoteCard({
     height: typeof window === "undefined" ? 720 : window.innerHeight,
   }));
   const dragOffset = useRef({ x: 0, y: 0 });
+  const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const [draftSize, setDraftSize] = useState(() => getNoteDimensions(note, noteCardSize));
 
   useEffect(() => {
     const updateViewport = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
@@ -59,12 +66,13 @@ export function StickyNoteCard({
     return () => window.removeEventListener("resize", updateViewport);
   }, []);
 
-  const desiredWidth = note.size === "wide" ? 360 : 280;
-  const noteWidth = Math.min(desiredWidth, Math.max(220, viewport.width - 24));
+  const currentSize = isResizing ? draftSize : getNoteDimensions(note, noteCardSize);
+  const noteWidth = Math.min(currentSize.width, Math.max(180, viewport.width - 24));
+  const noteHeight = currentSize.height;
   const minX = 8;
   const minY = viewport.height < 520 ? 84 : 92;
   const maxX = Math.max(minX, viewport.width - noteWidth - 8);
-  const maxY = Math.max(minY, viewport.height - 132);
+  const maxY = Math.max(minY, viewport.height - Math.min(noteHeight, viewport.height - minY) - 8);
   const displayX = Math.min(Math.max(note.x, minX), maxX);
   const displayY = Math.min(Math.max(note.y, minY), maxY);
 
@@ -74,7 +82,7 @@ export function StickyNoteCard({
       if (e.button !== 0) return;
       const target = e.target as HTMLElement;
       // Don't drag when interacting with controls.
-      if (target.closest("button, textarea, input, .sticky-note__menu")) return;
+      if (target.closest("button, textarea, input, .sticky-note__menu, .sticky-note__resize-handle")) return;
       // Sketch notes reserve the body for drawing; move them from the header.
       if (note.kind === "sketch" && !target.closest(".sticky-note__header")) return;
       // Don't drag if locked
@@ -99,6 +107,7 @@ export function StickyNoteCard({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
+      if (isResizing) return;
       if (!isDragging) return;
       const newX = e.clientX - dragOffset.current.x;
       const newY = e.clientY - dragOffset.current.y;
@@ -115,7 +124,7 @@ export function StickyNoteCard({
         setIsOverGoat(overGoat);
       }
     },
-    [isDragging, note.id, onMove, goatRef]
+    [isDragging, isResizing, note.id, onMove, goatRef]
   );
 
   const handlePointerUp = useCallback(
@@ -146,6 +155,34 @@ export function StickyNoteCard({
     [isDragging, note.id, onDelete, onDragEnd, goatRef]
   );
 
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMove = (event: PointerEvent) => {
+      const next = clampNoteDimensions(
+        note,
+        resizeStart.current.width + event.clientX - resizeStart.current.x,
+        resizeStart.current.height + event.clientY - resizeStart.current.y
+      );
+      setDraftSize(next);
+      event.preventDefault();
+    };
+
+    const handleUp = () => {
+      const next = clampNoteDimensions(note, draftSize.width, draftSize.height);
+      setIsResizing(false);
+      onUpdate(note.id, next);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp, { once: true });
+
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+  }, [draftSize.height, draftSize.width, isResizing, note, onUpdate]);
+
   const handleCopy = async (text: string) => {
     const ok = await copyToClipboard(text);
     if (ok) {
@@ -162,6 +199,16 @@ export function StickyNoteCard({
 
   const toggleSize = () => {
     onUpdate(note.id, { size: note.size === "wide" ? "normal" : "wide" });
+  };
+
+  const beginResize = (e: React.PointerEvent) => {
+    if (note.locked) return;
+    const size = getNoteDimensions(note, noteCardSize);
+    resizeStart.current = { x: e.clientX, y: e.clientY, width: size.width, height: size.height };
+    setDraftSize(size);
+    setIsResizing(true);
+    e.stopPropagation();
+    e.preventDefault();
   };
 
   const isFileOpen = note.kind === "file" && canOpenPath(note.path);
@@ -399,10 +446,10 @@ export function StickyNoteCard({
   return (
     <div
       ref={cardRef}
-      className={`sticky-note sticky-note--${note.color} sticky-note--${note.kind} sticky-note--${note.size} ${isDragging ? "sticky-note--dragging" : ""} ${isOverGoat ? "sticky-note--over-goat" : ""} ${note.locked ? "sticky-note--locked" : ""} ${isSelected ? "sticky-note--selected" : ""}`}
+      className={`sticky-note sticky-note--${note.color} sticky-note--${note.kind} sticky-note--${note.size} sticky-note--card-${noteCardSize} ${detailsOpen ? "sticky-note--details-open" : ""} ${isDragging ? "sticky-note--dragging" : ""} ${isResizing ? "sticky-note--resizing" : ""} ${isOverGoat ? "sticky-note--over-goat" : ""} ${note.locked ? "sticky-note--locked" : ""} ${isSelected ? "sticky-note--selected" : ""}`}
       style={{
         width: noteWidth,
-        minHeight: note.kind === "bundle" ? 220 : note.kind === "sketch" ? 120 : 96,
+        height: noteHeight,
         position: "absolute",
         left: displayX,
         top: displayY,
@@ -413,6 +460,9 @@ export function StickyNoteCard({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onDoubleClick={() => {
+        if (noteCardSize === "mini") setDetailsOpen((prev) => !prev);
+      }}
       title={note.locked ? t("lock.lockedHint") : undefined}
     >
       {/* Header */}
@@ -449,6 +499,12 @@ export function StickyNoteCard({
           {canEditBody && (
             <button onClick={startEditing}>✎ {t("note.edit")}</button>
           )}
+          {noteCardSize === "mini" && (
+            <button onClick={() => setDetailsOpen((prev) => !prev)}>
+              ⤢ {t("note.details")}
+            </button>
+          )}
+          {mainActions}
           <button onClick={toggleSize}>
             {note.size === "wide" ? "▫" : "▪"} {note.size === "wide" ? t("note.normalSize") : t("note.wideSize")}
           </button>
@@ -490,6 +546,9 @@ export function StickyNoteCard({
 
       {/* Body */}
       <div className="sticky-note__body">
+        {noteCardSize === "mini" && !detailsOpen && !editing && (
+          <MiniNoteBody note={note} bundleItems={bundleItems} imagePreviewSrc={imagePreviewSrc} />
+        )}
         {editing && (note.kind === "plain" || note.kind === "code") && (
           <div className="sticky-note__editor">
             <textarea
@@ -510,13 +569,13 @@ export function StickyNoteCard({
             </div>
           </div>
         )}
-        {!editing && note.kind === "code" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "code" && (
           <pre className="sticky-note__code">{note.body}</pre>
         )}
-        {!editing && note.kind === "url" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "url" && (
           <div className="sticky-note__url">{note.body}</div>
         )}
-        {!editing && note.kind === "file" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "file" && (
           <div className="sticky-note__file">
             <span className="sticky-note__file-name">
               {getBaseName(note.path || note.body)}
@@ -526,7 +585,7 @@ export function StickyNoteCard({
             )}
           </div>
         )}
-        {!editing && note.kind === "folder" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "folder" && (
           <div className="sticky-note__file">
             <span className="sticky-note__file-name">
               {getBaseName(note.path || note.body)}
@@ -536,7 +595,7 @@ export function StickyNoteCard({
             )}
           </div>
         )}
-        {!editing && note.kind === "image" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "image" && (
           <div className="sticky-note__image-container">
             {imagePreviewSrc && !imagePreviewFailed ? (
               <img 
@@ -561,7 +620,7 @@ export function StickyNoteCard({
             </div>
           </div>
         )}
-        {!editing && note.kind === "bundle" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "bundle" && (
           <div className="sticky-note__bundle">
             <div className="sticky-note__bundle-count">
               {t("bundle.itemCount").replace("{count}", String(bundleItems.length))}
@@ -606,7 +665,7 @@ export function StickyNoteCard({
             )}
           </div>
         )}
-        {!editing && note.kind === "plain" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "plain" && (
           <div className="sticky-note__text">
             {note.body.split("\n").map((line, index) => (
               <PlainTextLine
@@ -621,7 +680,7 @@ export function StickyNoteCard({
             ))}
           </div>
         )}
-        {!editing && note.kind === "sketch" && (
+        {(noteCardSize !== "mini" || detailsOpen) && !editing && note.kind === "sketch" && (
           <SketchCanvas note={note} onUpdate={onUpdate} locked={note.locked} />
         )}
       </div>
@@ -642,7 +701,7 @@ export function StickyNoteCard({
 
       {/* Actions */}
       <div className="sticky-note__actions">
-        {!editing && mainActions}
+        {!editing && noteCardSize !== "mini" && mainActions}
 
         {/* Copy feedback */}
         {copyFeedback && (
@@ -672,6 +731,14 @@ export function StickyNoteCard({
             </button>
           </div>
         </div>
+      )}
+      {!note.locked && (
+        <button
+          className="sticky-note__resize-handle"
+          onPointerDown={beginResize}
+          title={t("note.resize")}
+          aria-label={t("note.resize")}
+        />
       )}
     </div>
   );
@@ -721,6 +788,55 @@ function shortenPath(path: string): string {
   const parts = normalized.split("/").filter(Boolean);
   if (parts.length <= 3) return path;
   return `.../${parts.slice(-3).join("/")}`;
+}
+
+function MiniNoteBody({
+  note,
+  bundleItems,
+  imagePreviewSrc,
+}: {
+  note: StickyNote;
+  bundleItems: BundleItem[];
+  imagePreviewSrc: string | undefined;
+}) {
+  if (note.kind === "bundle") {
+    return (
+      <div className="sticky-note__mini">
+        <div className="sticky-note__mini-line">📦 {bundleItems.length} items</div>
+        {bundleItems.slice(0, 3).map((item) => (
+          <div key={item.id} className="sticky-note__mini-line">
+            {getBundleItemIcon(item.kind)} {item.name || getBaseName(item.path)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (note.kind === "image") {
+    return imagePreviewSrc ? (
+      <img src={imagePreviewSrc} alt={note.title || "image"} className="sticky-note__mini-image" draggable={false} />
+    ) : (
+      <div className="sticky-note__mini">🖼️ Image</div>
+    );
+  }
+
+  if (note.kind === "sketch") {
+    return <div className="sticky-note__mini">✍️ Sketch</div>;
+  }
+
+  if (note.kind === "file" || note.kind === "folder") {
+    return <div className="sticky-note__mini">{getBaseName(note.path || note.body)}</div>;
+  }
+
+  return (
+    <div className="sticky-note__mini">
+      {note.body.split("\n").slice(0, 3).map((line, index) => (
+        <div key={`${index}-${line}`} className="sticky-note__mini-line">
+          {line || "\u00a0"}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 type ChecklistLine = {

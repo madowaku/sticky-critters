@@ -647,8 +647,6 @@ body {
 /* --- Sticky Note Card --- */
 .sticky-note {
   position: absolute;
-  width: 260px;
-  min-height: var(--note-min-height, 100px);
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-md);
@@ -657,12 +655,13 @@ body {
   user-select: none;
   transition: box-shadow var(--transition-fast), transform var(--transition-fast);
   animation: noteAppear 0.3s ease-out;
-  overflow: hidden;
+  overflow: visible;
   opacity: var(--note-opacity, 0.94);
 }
 
-.sticky-note--wide {
-  width: 400px;
+.sticky-note--resizing {
+  cursor: nwse-resize;
+  transition: none;
 }
 
 @keyframes noteAppear {
@@ -717,7 +716,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: var(--spacing-sm) 10px 4px;
+  padding: calc(var(--spacing-sm) * var(--note-card-scale, 1)) 10px 4px;
   font-size: calc(12px * var(--font-scale, 1));
   font-weight: 600;
   color: var(--text-secondary);
@@ -798,6 +797,14 @@ body {
   cursor: not-allowed;
 }
 
+.sticky-note__menu .sticky-note__action-btn {
+  width: 100%;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
 .sticky-note__menu-danger:hover:not(:disabled) {
   color: #d32f2f;
   background: rgba(244, 67, 54, 0.1) !important;
@@ -842,10 +849,10 @@ body {
   font-size: calc(14px * var(--font-scale, 1));
   line-height: 1.5;
   color: var(--text-primary);
-  max-height: 180px;
+  max-height: none;
   overflow-y: auto;
   word-break: break-word;
-  flex: 1;
+  min-height: 0;
 }
 
 .sticky-note__editor {
@@ -885,7 +892,7 @@ body {
 
 .sticky-note--sketch .sticky-note__body {
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
   padding-bottom: 8px;
   cursor: crosshair;
 }
@@ -944,7 +951,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 132px;
+  max-height: 100%;
   overflow-y: auto;
   padding-right: 2px;
 }
@@ -1064,7 +1071,8 @@ body {
 
 .sticky-note__image-container {
   width: 100%;
-  max-height: 180px;
+  height: 100%;
+  min-height: 64px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: rgba(0, 0, 0, 0.05);
@@ -1076,7 +1084,8 @@ body {
 
 .sticky-note__image {
   max-width: 100%;
-  max-height: 180px;
+  max-height: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
 }
@@ -1100,6 +1109,96 @@ body {
   padding: 0 14px 8px;
   position: relative;
   margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sticky-note__resize-handle {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: linear-gradient(135deg, transparent 0 45%, rgba(0, 0, 0, 0.22) 46% 52%, transparent 53% 62%, rgba(0, 0, 0, 0.22) 63% 70%, transparent 71%);
+  cursor: nwse-resize;
+  opacity: 0.55;
+  z-index: 4;
+}
+
+.sticky-note__resize-handle:hover {
+  opacity: 0.9;
+}
+
+.sticky-note__mini {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: calc(12px * var(--font-scale, 1));
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.sticky-note__mini-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sticky-note__mini-image {
+  width: 100%;
+  height: 100%;
+  max-height: 74px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.sticky-note--card-mini {
+  border-radius: var(--radius-sm);
+}
+
+.sticky-note--card-mini .sticky-note__header {
+  gap: 4px;
+  padding: 6px 8px 2px;
+  font-size: calc(11px * var(--font-scale, 1));
+}
+
+.sticky-note--card-mini .sticky-note__kind-emoji {
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.sticky-note--card-mini .sticky-note__drag-grip,
+.sticky-note--card-mini .sticky-note__title {
+  display: none;
+}
+
+.sticky-note--card-mini .sticky-note__btn {
+  width: 22px;
+  height: 22px;
+}
+
+.sticky-note--card-mini .sticky-note__body {
+  padding: 4px 10px 8px;
+  font-size: calc(12px * var(--font-scale, 1));
+}
+
+.sticky-note--card-mini .sticky-note__actions {
+  min-height: 0;
+  padding: 0 10px 6px;
+}
+
+.sticky-note--card-mini .sticky-note__alarm-badge,
+.sticky-note--card-mini .sticky-note__today-badge {
+  max-width: 52px;
+  overflow: hidden;
+  padding: 2px 5px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.sticky-note--card-normal .sticky-note__body {
+  font-size: calc(14px * var(--font-scale, 1));
 }
 
 .sticky-note__action-btn {
@@ -2953,7 +3052,8 @@ body {
 .sketch-canvas {
   position: relative;
   width: 100%;
-  height: 210px;
+  height: 100%;
+  min-height: 120px;
   background: #fff;
   border-radius: var(--radius-sm);
   overflow: hidden;

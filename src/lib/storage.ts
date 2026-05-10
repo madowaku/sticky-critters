@@ -1,4 +1,4 @@
-import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, BundleItem } from "../types";
+import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, BundleItem, NoteCardSize } from "../types";
 import { isUrl } from "./noteDetection";
 
 const STORAGE_KEY = "sticky-critters-notes";
@@ -23,6 +23,7 @@ export interface AppearanceSettings {
   fontScale: number;    // 0.85 to 1.25
   density: Density;
   colorTheme: ColorTheme;
+  noteCardSize: NoteCardSize;
 }
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
@@ -30,6 +31,7 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   fontScale: 1,
   density: "comfortable",
   colorTheme: "pastel",
+  noteCardSize: "compact",
 };
 
 export interface AppSettings {
@@ -286,6 +288,8 @@ export function createNoteDraft(input: {
   size?: NoteSize;
   x?: number;
   y?: number;
+  width?: number;
+  height?: number;
   alarmAt?: string;
   expiresAt?: string;
   reviewAfter?: string;
@@ -305,6 +309,8 @@ export function createNoteDraft(input: {
     size: input.size ?? "normal",
     x: input.x ?? Math.max(40, window.innerWidth / 2 - 140 + jitterX),
     y: input.y ?? Math.max(40, window.innerHeight / 2 - 100 + jitterY),
+    width: input.width,
+    height: input.height,
     pinned: false,
     collapsed: false,
     createdAt: now,

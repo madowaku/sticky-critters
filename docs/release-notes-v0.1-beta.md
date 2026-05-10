@@ -14,7 +14,7 @@ Sticky Critters is a "cute but powerful" desktop sticky note application designe
 - **Productivity**: Alarm notifications (Alarm Chicken) and "Today Only" temporary notes.
 - **Customization**: Dark/Light themes, density settings, and customizable global hotkeys.
 - **Desktop Mode**: Borderless, click-through-capable mode for a truly integrated desktop experience.
-- **Kangaroo Pocket**: Open a small drop target from the tray menu, then drop files, folders, or images to turn them into sticky notes.
+- **Tray Drop**: Drop files, folders, or images onto the tray or main window to turn them into sticky notes.
 
 ### Added in v0.1.1 Beta
 - **Bundle Note**: When multiple files, folders, or images are dropped together, Sticky Critters can collect them into one sticky note.
@@ -22,17 +22,24 @@ Sticky Critters is a "cute but powerful" desktop sticky note application designe
   - Folders open as folders, while images and files use the existing safe open guard.
   - Dangerous executable files remain blocked for safety.
 
+### Added / Improved in v0.1.2 Beta
+- **Resizable Notes**: Notes now support saved width and height, with a small resize handle in the lower-right corner.
+- **Mini Note Cards**: Appearance settings now include Normal, Compact, and Mini card sizes for denser desktop layouts.
+- **Bundle Note Polish**: Bundle notes use saved sizes and internal scrolling so larger file sets stay manageable.
+- **Tray Drop Wording Cleanup**: Documentation now treats tray drop and main-window drop as the primary file/folder workflows. Kangaroo Pocket remains experimental and is no longer described as the main path.
+- **Windows Beta Installer**: The default desktop bundle now builds the NSIS setup `.exe`. MSI remains optional for environments where WiX and Windows Installer Service are available.
+
 ### Safety First
 - **No File Deletion**: We only manage links. Your original files are safe.
 - **No Command Execution**: We don't run scripts or commands.
 - **No Folder Crawling**: Folder notes store the path only. Sticky Critters does not automatically list, scan, or monitor folder contents.
 - **Local First**: Your data stays on your machine (`notes.json` and `settings.json`).
 
-### Kangaroo Pocket Notes
-- Kangaroo Pocket is opened from the tray menu and appears as a small drop window near the lower-right corner of the screen.
-- It accepts files, folders, and images, using the same safe note creation flow as dropping onto the main window.
-- It is **not** direct drag-and-drop onto the tray icon.
-- After a drop, Sticky Critters shows the main window. If Click-through was enabled, the app returns to Edit Mode so you can interact with the new notes.
+### Tray Drop Notes
+- Files, folders, and images can be dropped onto the tray or the main window in the Windows beta flow.
+- Multiple dropped items become one Bundle Note.
+- Kangaroo Pocket window code is still present as an experimental path, but it may not appear consistently on every environment.
+- After a successful drop, Sticky Critters shows the main window. If Click-through was enabled, the app returns to Edit Mode so you can interact with the new notes.
 
 ### Known Issues & Roadmap
 - See [Known Limitations](known-limitations.md) for current constraints.
@@ -43,7 +50,7 @@ Sticky Critters is a "cute but powerful" desktop sticky note application designe
   - Improved group auto-management
 
 ### How to Install
-1. Download the `.msi` or `.exe` from the releases page (coming soon).
+1. Download the setup `.exe` from the releases page (coming soon). MSI can be enabled later if Windows Installer based deployment is needed.
 2. Run the installer.
 3. Launch "Sticky Critters" from your Start menu.
 

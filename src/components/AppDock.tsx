@@ -171,7 +171,7 @@ export function AppDock({
           <button
             className="app-dock__btn app-dock__btn--win"
             onClick={handleHide}
-            title={t("window.closeToTray")}
+            title={`${t("window.closeToTray")} / ${t("tray.dropHint")}`}
             disabled={!isTauri}
           >
             ✕

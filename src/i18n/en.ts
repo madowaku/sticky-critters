@@ -23,6 +23,8 @@ export const en = {
     cancel: "Cancel",
     editHint: "Ctrl+Enter to save / Esc to cancel",
     more: "More",
+    resize: "Resize",
+    details: "Details",
   },
   image: {
     previewUnavailable: "Preview unavailable",
@@ -161,7 +163,7 @@ export const en = {
     tipDrag: "Drag to move",
     tipRestore: "Deleted notes can be restored",
     tipHotkey: "Recall with Ctrl+Shift+Space",
-    tipKangaroo: "Drop files into Kangaroo Pocket",
+    tipKangaroo: "Drop files onto the tray",
   },
   alwaysOnTop: {
     on: "On top",
@@ -315,6 +317,9 @@ export const en = {
     title: "Appearance",
     noteOpacity: "Note opacity",
     fontScale: "Font size",
+    noteCardSize: "Note size",
+    normal: "Normal",
+    mini: "Mini",
     density: "Spacing",
     compact: "Compact",
     comfortable: "Comfortable",
@@ -346,6 +351,10 @@ export const en = {
     modeMerge: "Merge",
     modeReplace: "Replace",
     confirmReplace: "This will replace your current notes and settings. Continue?",
+  },
+  tray: {
+    drop: "Drop to tray",
+    dropHint: "Drop files, folders, or images onto the tray to create notes",
   },
 };
 

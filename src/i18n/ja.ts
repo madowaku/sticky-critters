@@ -25,6 +25,8 @@ export const ja: Dictionary = {
     cancel: "キャンセル",
     editHint: "Ctrl+Enterで保存 / Escでキャンセル",
     more: "その他",
+    resize: "サイズ変更",
+    details: "詳細",
   },
   image: {
     previewUnavailable: "プレビューできません",
@@ -163,7 +165,7 @@ export const ja: Dictionary = {
     tipDrag: "ドラッグで移動",
     tipRestore: "削除しても復元できます",
     tipHotkey: "Ctrl+Shift+Spaceで呼び出し",
-    tipKangaroo: "ファイルはKangaroo Pocketへ",
+    tipKangaroo: "ファイルはトレイへドロップ",
   },
   alwaysOnTop: {
     on: "最前面 ON",
@@ -317,6 +319,9 @@ export const ja: Dictionary = {
     title: "外観",
     noteOpacity: "付箋の不透明度",
     fontScale: "フォントサイズ",
+    noteCardSize: "付箋サイズ",
+    normal: "標準",
+    mini: "ミニ",
     density: "余白",
     compact: "ぎゅっと",
     comfortable: "ふつう",
@@ -348,5 +353,9 @@ export const ja: Dictionary = {
     modeMerge: "追加で読み込む",
     modeReplace: "置き換える",
     confirmReplace: "現在の付箋と設定を置き換えます。続行しますか？",
+  },
+  tray: {
+    drop: "トレイにドロップ",
+    dropHint: "ファイル、フォルダ、画像をトレイにドロップすると付箋になります",
   },
 };

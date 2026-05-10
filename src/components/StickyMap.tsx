@@ -1,22 +1,27 @@
 import React, { useMemo } from "react";
-import type { StickyNote, NoteGroup } from "../types";
+import type { NoteCardSize, StickyNote, NoteGroup } from "../types";
 import { useTranslation } from "../i18n/I18nContext";
+import { getNoteDimensions } from "../lib/noteLayout";
 
 interface Props {
   notes: StickyNote[];
   groups: NoteGroup[];
+  noteCardSize: NoteCardSize;
   onJump: (x: number, y: number) => void;
   onClose: () => void;
 }
 
-export function StickyMap({ notes, groups, onJump, onClose }: Props) {
+export function StickyMap({ notes, groups, noteCardSize, onJump, onClose }: Props) {
   const { t } = useTranslation();
 
   const bounds = useMemo(() => {
     if (notes.length === 0 && groups.length === 0) return null;
 
     const allItems = [
-      ...notes.map(n => ({ x: n.x, y: n.y, w: n.size === "wide" ? 360 : 280, h: 160 })),
+      ...notes.map(n => {
+        const dimensions = getNoteDimensions(n, noteCardSize);
+        return { x: n.x, y: n.y, w: dimensions.width, h: dimensions.height };
+      }),
       ...groups.map(g => ({ x: g.x, y: g.y, w: g.width, h: g.height }))
     ];
 
@@ -34,7 +39,7 @@ export function StickyMap({ notes, groups, onJump, onClose }: Props) {
       width: (maxX - minX) + margin * 2,
       height: (maxY - minY) + margin * 2
     };
-  }, [notes, groups]);
+  }, [notes, groups, noteCardSize]);
 
   const mapWidth = 260;
   const mapHeight = 180;
@@ -100,7 +105,7 @@ export function StickyMap({ notes, groups, onJump, onClose }: Props) {
             })}
             {notes.map(n => {
               const pos = worldToMap(n.x, n.y);
-              const w = n.size === "wide" ? 360 : 280;
+              const dimensions = getNoteDimensions(n, noteCardSize);
               return (
                 <div 
                   key={n.id}
@@ -108,8 +113,8 @@ export function StickyMap({ notes, groups, onJump, onClose }: Props) {
                   style={{
                     left: pos.x,
                     top: pos.y,
-                    width: Math.max(4, w * scale),
-                    height: Math.max(4, 160 * scale),
+                    width: Math.max(4, dimensions.width * scale),
+                    height: Math.max(4, dimensions.height * scale),
                   }}
                 />
               );

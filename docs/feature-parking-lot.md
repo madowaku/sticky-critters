@@ -26,6 +26,8 @@
 
 \- macOS build / signing / notarization validation
 
+\- Kangaroo Pocket window revival / positioner-based tray-near drop window
+
 
 
 \## Rule

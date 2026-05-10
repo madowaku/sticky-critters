@@ -27,6 +27,7 @@ import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { setOnSaveError, getStorageInfo, saveSettings, loadSettings, type StorageInfo, type DisplayMode, type InteractionMode, type LaunchBehavior, type AppearanceSettings, DEFAULT_APPEARANCE } from "./lib/storage";
 import { exportBackup, type ExportData } from "./lib/backup";
 import { getDroppedPathInfo, isTauriDropAvailable, type DroppedPathInfo } from "./lib/tauriDrop";
+import { getNoteDimensions } from "./lib/noteLayout";
 import {
   KANGAROO_POCKET_DROP_EVENT,
   KANGAROO_POCKET_OPEN_EVENT,
@@ -840,13 +841,13 @@ function App() {
     let currentX = minX;
     const updates = targets.map(n => {
       const update = { id: n.id, partial: { x: currentX, y: minY } };
-      const width = n.size === "wide" ? 360 : 280;
+      const width = getNoteDimensions(n, appearance.noteCardSize).width;
       currentX += width + gap;
       return update;
     });
     
     updateNotes(updates);
-  }, [notes, rememberLayout, selectedNoteIds, updateNotes]);
+  }, [appearance.noteCardSize, notes, rememberLayout, selectedNoteIds, updateNotes]);
 
   const handleArrangeColumn = useCallback(() => {
     const targets = notes.filter(n => selectedNoteIds.includes(n.id) && !n.locked)
@@ -861,14 +862,13 @@ function App() {
     let currentY = minY;
     const updates = targets.map(n => {
       const update = { id: n.id, partial: { x: minX, y: currentY } };
-      // Estimate height: base 160 + roughly based on body length
-      const estimatedHeight = Math.max(160, 120 + (n.body.length / 4));
+      const estimatedHeight = getNoteDimensions(n, appearance.noteCardSize).height;
       currentY += estimatedHeight + gap;
       return update;
     });
 
     updateNotes(updates);
-  }, [notes, rememberLayout, selectedNoteIds, updateNotes]);
+  }, [appearance.noteCardSize, notes, rememberLayout, selectedNoteIds, updateNotes]);
 
   const handleDistribute = useCallback(() => {
     const targets = notes.filter(n => selectedNoteIds.includes(n.id) && !n.locked)
@@ -1139,10 +1139,11 @@ function App() {
 
   return (
     <div
-      className={`app app--${displayMode} app--density-${appearance.density} app--theme-${appearance.colorTheme}`}
+      className={`app app--${displayMode} app--density-${appearance.density} app--theme-${appearance.colorTheme} app--card-${appearance.noteCardSize}`}
       style={{
         "--note-opacity": appearance.noteOpacity,
         "--font-scale": appearance.fontScale,
+        "--note-card-scale": appearance.noteCardSize === "mini" ? 0.82 : appearance.noteCardSize === "normal" ? 1 : 0.92,
       } as React.CSSProperties}
       onPointerUp={handleNoteDragEnd}
     >
@@ -1343,6 +1344,7 @@ function App() {
         onOpenSettings={() => setSettingsDrawerOpen(true)}
         selectedNoteIds={selectedNoteIds}
         goatRef={goatRef}
+        noteCardSize={appearance.noteCardSize}
         onNoteDragStart={handleNoteDragStart}
         onNoteDragEnd={handleNoteDragEnd}
       />
@@ -1364,6 +1366,7 @@ function App() {
         <StickyMap 
           notes={notes} 
           groups={groups} 
+          noteCardSize={appearance.noteCardSize}
           onJump={handleJump} 
           onClose={() => setMapOpen(false)} 
         />

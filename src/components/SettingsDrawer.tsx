@@ -219,6 +219,29 @@ export function SettingsDrawer({
               </div>
             </div>
             <div className="settings-drawer__row" style={{ marginTop: "8px" }}>
+              <span>{t("appearance.noteCardSize")}</span>
+              <div className="settings-drawer__segmented">
+                <button
+                  className={`settings-drawer__segmented-btn ${appearance.noteCardSize === "normal" ? "active" : ""}`}
+                  onClick={() => onSetAppearance({ ...appearance, noteCardSize: "normal" })}
+                >
+                  {t("appearance.normal")}
+                </button>
+                <button
+                  className={`settings-drawer__segmented-btn ${appearance.noteCardSize === "compact" ? "active" : ""}`}
+                  onClick={() => onSetAppearance({ ...appearance, noteCardSize: "compact" })}
+                >
+                  {t("appearance.compact")}
+                </button>
+                <button
+                  className={`settings-drawer__segmented-btn ${appearance.noteCardSize === "mini" ? "active" : ""}`}
+                  onClick={() => onSetAppearance({ ...appearance, noteCardSize: "mini" })}
+                >
+                  {t("appearance.mini")}
+                </button>
+              </div>
+            </div>
+            <div className="settings-drawer__row" style={{ marginTop: "8px" }}>
               <span>{t("appearance.density")}</span>
               <div className="settings-drawer__segmented">
                 <button 

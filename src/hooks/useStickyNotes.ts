@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { loadAllNotes, loadAllGroups, saveAllNotes, createNoteDraft, migrateLocalStorageToFileIfNeeded } from "../lib/storage";
 import type { StickyNote, NoteKind, NoteColor, NoteSize, NoteGroup, InkStroke, BundleItem } from "../types";
 import { detectNoteKind } from "../lib/noteDetection";
+import { getNoteDimensions } from "../lib/noteLayout";
 
 export function useStickyNotes() {
   const [allNotes, setAllNotes] = useState<StickyNote[]>([]);
@@ -50,6 +51,8 @@ export function useStickyNotes() {
       size?: NoteSize;
       x?: number;
       y?: number;
+      width?: number;
+      height?: number;
       alarmAt?: string;
       expiresAt?: string;
       reviewAfter?: string;
@@ -107,8 +110,8 @@ export function useStickyNotes() {
     // Calculate bounding box
     const minX = Math.min(...targetNotes.map(n => n.x));
     const minY = Math.min(...targetNotes.map(n => n.y));
-    const maxX = Math.max(...targetNotes.map(n => n.x + (n.size === "wide" ? 360 : 280)));
-    const maxY = Math.max(...targetNotes.map(n => n.y + 160)); // Estimating height
+    const maxX = Math.max(...targetNotes.map(n => n.x + getNoteDimensions(n).width));
+    const maxY = Math.max(...targetNotes.map(n => n.y + getNoteDimensions(n).height));
 
     const newGroup: NoteGroup = {
       id,

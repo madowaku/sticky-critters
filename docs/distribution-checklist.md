@@ -4,16 +4,16 @@
 
 - Build command: `npm run tauri:build`
 - OGP image command: `npm run assets:og`
-- NSIS installer: `src-tauri/target/release/bundle/nsis/Sticky Critters_0.1.0_x64-setup.exe`
-- MSI installer: `src-tauri/target/release/bundle/msi/Sticky Critters_0.1.0_x64_en-US.msi`
-- Attach both installers to GitHub Releases.
+- NSIS installer: `src-tauri/target/release/bundle/nsis/Sticky Critters_0.1.2_x64-setup.exe`
+- MSI installer: optional; enable the MSI target only when WiX and Windows Installer Service are available.
+- Attach the setup `.exe` to GitHub Releases.
 - Add SHA256 checksums when publishing.
 
 ## Version And Identity
 
-- `package.json`: `0.1.0`
-- `src-tauri/tauri.conf.json`: `0.1.0`
-- `src-tauri/Cargo.toml`: `0.1.0`
+- `package.json`: `0.1.2`
+- `src-tauri/tauri.conf.json`: `0.1.2`
+- `src-tauri/Cargo.toml`: `0.1.2`
 - Product name: `Sticky Critters`
 - Identifier: `com.stickycritters.desktop`
 
@@ -31,8 +31,8 @@
 3. Run `npm run assets:og`.
 4. Run `npm run tauri:build`.
 5. Test install on a clean Windows machine.
-6. Create tag such as `v0.1.0-beta`.
-7. Publish installers and checksums.
+6. Create tag such as `v0.1.2-beta`.
+7. Publish the setup `.exe` and checksum.
 8. Paste release notes from `docs/release-notes-v0.1-beta.md`.
 9. Mention that auto-update is not included in this beta.
 

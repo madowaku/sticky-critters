@@ -1,6 +1,7 @@
 export type NoteKind = "plain" | "code" | "url" | "file" | "folder" | "image" | "sketch" | "bundle";
 export type NoteColor = "yellow" | "blue" | "pink" | "green" | "gray" | "purple";
 export type NoteSize = "normal" | "wide";
+export type NoteCardSize = "normal" | "compact" | "mini";
 
 export type BundleItem = {
   id: string;
@@ -33,6 +34,8 @@ export type StickyNote = {
   path?: string;
   color: NoteColor;
   size: NoteSize;
+  width?: number;
+  height?: number;
   x: number;
   y: number;
   pinned: boolean;
